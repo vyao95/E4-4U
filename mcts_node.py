@@ -1,5 +1,5 @@
 class MCTSNode:
-    def __init__(self, parent=None, parent_action=None, action_list=[]):
+    def __init__(self, parent=None, parent_action=None, untried_actions=[], state, player):
         """ Initializes the tree node for MCTS. The node stores links to other nodes in the tree (parent and child
         nodes), as well as keeps track of the number of wins and total simulations that have visited the node.
 
@@ -13,12 +13,13 @@ class MCTSNode:
         self.parent_action = parent_action      # The move that got us to this node - "None" for the root node.
 
         self.child_nodes = {}                   # Action -> MCTSNode dictionary of children
-        self.untried_actions = action_list      # Yet unexplored actions
+        self.untried_actions = untried_actions      # Yet unexplored actions
 
         self.wins = 0                           # Total wins of all paths through this node.
         self.visits = 0                         # Number of times this node has been visited.
 
-        self.state = None                       # state of the game 
+        self.state = None                       # state of the game
+        self.turn = None                        # current player
 
     def __repr__(self):
         """
