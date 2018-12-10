@@ -1,5 +1,5 @@
 class MCTSNode:
-    def __init__(self, parent=None, parent_action=None, untried_actions=[], state, player):
+    def __init__(self, parent=None, parent_action=None, untried_actions=[], state, turn):
         """ Initializes the tree node for MCTS. The node stores links to other nodes in the tree (parent and child
         nodes), as well as keeps track of the number of wins and total simulations that have visited the node.
 
@@ -18,8 +18,8 @@ class MCTSNode:
         self.wins = 0                           # Total wins of all paths through this node.
         self.visits = 0                         # Number of times this node has been visited.
 
-        self.state = None                       # state of the game
-        self.turn = None                        # current player
+        self.state = state                      # state of the game
+        self.turn = turn                        # current player
 
     def __repr__(self):
         """

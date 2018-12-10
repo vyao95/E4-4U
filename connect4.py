@@ -13,7 +13,7 @@ class Board:
         self.state = {}
         for col in range(width):
             for row in range(height):
-                self.state[col,row] = empty
+                self.state[(col,row)] = empty
 
 
     # Prints the board at the current state
