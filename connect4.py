@@ -39,7 +39,7 @@ class Board:
                 print("do_move: Not a valid move")
         else:
             print("do_move: Move not in board.")
-
+        self.state = state
         return state
 
 
