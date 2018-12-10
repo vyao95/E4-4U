@@ -170,12 +170,19 @@ class Board:
                     break
                 elif row == height - 1: # if we reach the top
                     last_moves.append((col,row))
-
+                    
+            
         won = self.get_winning_moves(state,last_moves)
+        # won will contains wins for either player
+        # so we must check if that player actually owns the piece.
+        for move in won: 
+            if state[move[0]] != move[1]:
+                won.remove(move)
+                
         if len(won) == 0:
             return (False,None)
         else:
-            return (True,won[0][1])
+            return (True,won)
 
 
 b = Board()
@@ -220,6 +227,8 @@ b.state[6,5] = player
 
 
 b.state[4,1] = enemy
+b.state[4,2] = player
+
 
 b.print_board(b.state)
 
