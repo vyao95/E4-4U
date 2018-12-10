@@ -62,11 +62,11 @@ def expand_leaf(node, board):
     move = board.get_best_move(node.state,node.untried_actions)
     node.untried_actions.remove(move)
     new_state = board.do_move(node.state,node.turn,move)
-    new_node = MCTSNode(parent = node,
+    new_node = MCTSNode(state = new_state,
+                        turn = player if node.turn == enemy else enemy,
+                        parent = node,
                         parent_action = move,
-                        untried_actions = board.get_valid_moves(new_state),
-                        state = new_state,
-                        turn = player if node.turn == enemy else enemy)
+                        untried_actions = board.get_valid_moves(new_state))
     node.child_nodes[move] = new_node
     return new_node
 
@@ -117,11 +117,11 @@ def MCTS(board):
     Returns:    The action to be taken.
 
     """
-    root_node = MCTSNode(   parent=None,
+    root_node = MCTSNode(   state = board.state,
+                            turn = player,
+                            parent=None,
                             parent_action=None,
-                            action_list=board.get_valid_moves(state),
-                            state = board.state,
-                            turn = player)
+                            action_list=board.get_valid_moves(state))
 
     for _ in range(num_nodes):
         node = root_node
