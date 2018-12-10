@@ -14,6 +14,14 @@ class Board:
         for col in range(width):
             for row in range(height):
                 self.state[col,row] = empty
+                
+    
+    def print_board(self,state):
+        for i in range(height-1,-1,-1):
+            for j in range(0,width):
+                print(str(state[(j,i)]) + " ", end="")
+            print()
+        print()
         
     def do_move(self,state,player,move):
         if move in state:
@@ -26,8 +34,10 @@ class Board:
                 print("do_move: Not a valid move")
         else:
             print("do_move: Move not in board.")
+        
+        return state
             
-    #Get valid moves
+    #Get moves you can do for next turn
     def get_valid_moves(self,state):
         valid_moves = []
         for col in range(width):
@@ -37,8 +47,7 @@ class Board:
                     break
         return valid_moves
         
-    #Get winning moves
-    # turn: winning move for turn (player or enemy)
+    #check the valid moves and see if any are moves that will make you win
     def get_winning_moves(self,state,turn,valid_moves=[]):
         winning_moves = []
         if len(valid_moves) == 0: # this will let us use our own valid moves if we choose to optimize stuff
@@ -102,17 +111,84 @@ class Board:
                                 break
             
         return winning_moves
+        
+    def is_ended(self,state):
+        if len(self.get_valid_moves(state)) == 0:
+            return True
+            
+        last_moves = []
+        for col in range(width):
+            for row in range(height):
+                if state[col,row] == empty:
+                    if (col,row-1) in state:
+                        last_moves.append((col,row-1))
+                    break
+                    
+        for move in last_moves:
+            turn = state[move]
+            won = 0
+            # check vertical win
+            if move[1] > 2:
+                for i in range(1,4):
+                    if (state[(move[0],move[1]-i)] == turn):
+                        if won == 2:
+                            return True
+                        else:
+                            won += 1
+                    else: 
+                        break
+        
+            won = 0
+            #horizontal win
+            for k in range(-1,2,2): # check to both left and right
+                for i in range(1,4): 
+                    if (move[0]-i*k,move[1]) in state: # check 3 left/right
+                        if (state[(move[0]-i*k,move[1])] == turn):
+                            if won == 2:
+                                return True
+                            else:
+                                won += 1
+                        else:
+                            break
+                                
+            won = 0
+            # / win
+            for k in range(-1,2,2): # check bottom left and top right directions
+                for i in range(1,4):
+                    if (move[0]-i*k,move[1]-i*k) in state:
+                        if (state[(move[0]-i*k,move[1]-i*k)] == turn):
+                            if won == 2:
+                                return True
+                            else:
+                                won += 1
+                        else: 
+                            break
+                                
+            won = 0
+            # \ win
+            for k in range(-1,2,2): # check bottom left and top right directions
+                for i in range(1,4):
+                    if (move[0]-i*k,move[1]+i*k) in state:
+                        if (state[(move[0]-i*k,move[1]+i*k)] == turn):
+                            if won == 2:
+                                return True
+                            else:
+                                won += 1
+                        else: 
+                            break
+        return False
             
         
 b = Board()
-# for i in range(0,width):
-    # for j in range(0,height):
-        # b.do_move(b.state,enemy,(i,j))
-
-# b.state[3,0] = empty
-# b.state[2,1] = player
-# b.state[1,2] = player
-# b.state[0,3] = player
+for i in range(0,3):
+    for j in range(0,3-i):
+        b.do_move(b.state,enemy,(i,j))
+b.state[0,3] = player
+b.state[1,2] = player
+b.state[2,1] = player
+b.state[3,0] = player
+b.print_board(b.state)
 
 print(b.get_valid_moves(b.state))
 print(b.get_winning_moves(b.state,player))
+print(b.is_ended(b.state))
