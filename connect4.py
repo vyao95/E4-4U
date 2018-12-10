@@ -1,3 +1,5 @@
+from E4_4U import MCTS
+from random import choice
 player = 'o'
 enemy = 'x'
 empty = '.'
@@ -186,50 +188,15 @@ class Board:
 
 
 b = Board()
-b.state[0,0] = enemy
-b.state[1,0] = player
-b.state[2,0] = player
-b.state[3,0] = enemy
-b.state[4,0] = enemy
-b.state[5,0] = enemy
-b.state[6,0] = player
-
-b.state[1,1] = enemy
-b.state[2,1] = enemy
-b.state[3,1] = player
-b.state[5,1] = enemy
-b.state[6,1] = enemy
-
-b.state[1,2] = player
-b.state[2,2] = enemy
-b.state[3,2] = enemy
-b.state[5,2] = player
-b.state[6,2] = enemy
-
-b.state[1,3] = player
-b.state[2,3] = player
-b.state[3,3] = player
-b.state[5,3] = player
-b.state[6,3] = player
-
-b.state[1,4] = enemy
-b.state[2,4] = player
-b.state[6,2] = enemy
-b.state[3,4] = enemy
-b.state[5,4] = player
-b.state[6,4] = enemy
-
-b.state[1,5] = enemy
-b.state[2,5] = player
-b.state[3,5] = player
-b.state[5,5] = enemy
-b.state[6,5] = player
-
-
-b.state[4,1] = enemy
-b.state[4,2] = player
-
-
+j=0
+while not b.is_ended(b.state)[0]:
+    nextmove=MCTS(b)
+    if j%2 == 0:
+        b.do_move(b.state,player,nextmove)
+    else:
+        b.do_move(b.state,enemy,nextmove)
+    b.print_board(b.state)
+    
 b.print_board(b.state)
 
 print(b.get_valid_moves(b.state))

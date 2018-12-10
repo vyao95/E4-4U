@@ -82,13 +82,16 @@ def rollout(board, node):
     """
     state = node.state
     turn = node.turn
-    game_over = (False,_)
+    game_over = (False,0)
 
     while not game_over[0]:
-        move = choice(board.get_valid_moves(state))
-        state = board.do_move(state, turn, move)
+        if not board.get_valid_moves(board.state): 
+            print(game_over)
+            board.print_board(board.state)
+        move = choice(board.get_valid_moves(board.state))
+        state = board.do_move(board.state, turn, move)
         turn = player if turn == enemy else enemy
-        game_over = board.is_ended(state)
+        game_over = board.is_ended(board.state)
 
     return game_over[1]
 
@@ -121,7 +124,7 @@ def MCTS(board):
                             turn = player,
                             parent=None,
                             parent_action=None,
-                            action_list=board.get_valid_moves(state))
+                            untried_actions=board.get_valid_moves(board.state))
 
     for _ in range(num_nodes):
         node = root_node
