@@ -52,66 +52,65 @@ class Board:
         winning_moves = []
         if len(valid_moves) == 0: # this will let us use our own valid moves if we choose to optimize stuff
             valid_moves = self.get_valid_moves(state)
-        for move in valid_moves:
-            turn = state[move]
-            if turn == '.':
-                continue
-            winnable = 0
-            # check vertical win
-            if move[1] > 2:
-                for i in range(1,4):
-                    if (state[(move[0],move[1]-i)] == turn):
-                        if winnable == 2:
-                            winning_moves.append((move,turn))
+        players = [player,enemy]
+        for turn in players:
+            for move in valid_moves:
+                winnable = 0
+                # check vertical win
+                if move[1] > 2:
+                    for i in range(1,4):
+                        if (state[(move[0],move[1]-i)] == player):
+                            if winnable == 2:
+                                winning_moves.append((move,player))
+                            else:
+                                winnable += 1
                         else:
-                            winnable += 1
-                    else:
-                        break
+                            break
 
-            winnable = 0
-            #horizontal win
-            for k in range(-1,2,2): # check to both left and right
-                if move not in winning_moves: # haven't already found win from one direction
-                    for i in range(1,4):
-                        if (move[0]-i*k,move[1]) in state: # check 3 left/right
-                            if (state[(move[0]-i*k,move[1])] == turn):
-                                if winnable == 2:
-                                    winning_moves.append((move,turn))
-                                    break
+                winnable = 0
+                #horizontal win
+                for k in range(-1,2,2): # check to both left and right
+                    if move not in winning_moves: # haven't already found win from one direction
+                        for i in range(1,4):
+                            if (move[0]-i*k,move[1]) in state: # check 3 left/right
+                                if (state[(move[0]-i*k,move[1])] == turn):
+                                    if winnable == 2:
+                                        winning_moves.append((move,turn))
+                                        break
+                                    else:
+                                        winnable += 1
                                 else:
-                                    winnable += 1
-                            else:
-                                break
+                                    break
 
-            winnable = 0
-            # / win
-            for k in range(-1,2,2): # check bottom left and top right directions
-                if move not in winning_moves: # haven't already found win from one direction
-                    for i in range(1,4):
-                        if (move[0]-i*k,move[1]-i*k) in state:
-                            if (state[(move[0]-i*k,move[1]-i*k)] == turn):
-                                if winnable == 2:
-                                    winning_moves.append((move,turn))
-                                    break
+                winnable = 0
+                # / win
+                for k in range(-1,2,2): # check bottom left and top right directions
+                    if move not in winning_moves: # haven't already found win from one direction
+                        for i in range(1,4):
+                            if (move[0]-i*k,move[1]-i*k) in state:
+                                if (state[(move[0]-i*k,move[1]-i*k)] == turn):
+                                    if winnable == 2:
+                                        winning_moves.append((move,turn))
+                                        break
+                                    else:
+                                        winnable += 1
                                 else:
-                                    winnable += 1
-                            else:
-                                break
+                                    break
 
-            winnable = 0
-            # \ win
-            for k in range(-1,2,2): # check bottom left and top right directions
-                if move not in winning_moves: # haven't already found win from one direction
-                    for i in range(1,4):
-                        if (move[0]-i*k,move[1]+i*k) in state:
-                            if (state[(move[0]-i*k,move[1]+i*k)] == turn):
-                                if winnable == 2:
-                                    winning_moves.append((move,turn))
-                                    break
+                winnable = 0
+                # \ win
+                for k in range(-1,2,2): # check bottom left and top right directions
+                    if move not in winning_moves: # haven't already found win from one direction
+                        for i in range(1,4):
+                            if (move[0]-i*k,move[1]+i*k) in state:
+                                if (state[(move[0]-i*k,move[1]+i*k)] == turn):
+                                    if winnable == 2:
+                                        winning_moves.append((move,turn))
+                                        break
+                                    else:
+                                        winnable += 1
                                 else:
-                                    winnable += 1
-                            else:
-                                break
+                                    break
 
         return winning_moves
 
@@ -134,13 +133,48 @@ class Board:
 
 
 b = Board()
-for i in range(0,3):
-    for j in range(0,3-i):
-        b.do_move(b.state,enemy,(i,j))
-b.state[0,3] = player
+b.state[0,0] = enemy
+b.state[1,0] = player
+b.state[2,0] = player
+b.state[3,0] = enemy
+b.state[4,0] = enemy
+b.state[5,0] = enemy
+b.state[6,0] = player
+
+b.state[1,1] = enemy
+b.state[2,1] = enemy
+b.state[3,1] = player
+b.state[5,1] = enemy
+b.state[6,1] = enemy
+
 b.state[1,2] = player
-b.state[2,1] = player
-b.state[3,0] = player
+b.state[2,2] = enemy
+b.state[3,2] = enemy
+b.state[5,2] = player
+b.state[6,2] = enemy
+
+b.state[1,3] = player
+b.state[2,3] = player
+b.state[3,3] = player
+b.state[5,3] = player
+b.state[6,3] = player
+
+b.state[1,4] = enemy
+b.state[2,4] = player
+b.state[6,2] = enemy
+b.state[3,4] = enemy
+b.state[5,4] = player
+b.state[6,4] = enemy
+
+b.state[1,5] = enemy
+b.state[2,5] = player
+b.state[3,5] = player
+b.state[5,5] = enemy
+b.state[6,5] = player
+
+
+b.state[4,1] = enemy
+
 b.print_board(b.state)
 
 print(b.get_valid_moves(b.state))
