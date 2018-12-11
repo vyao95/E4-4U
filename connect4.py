@@ -1,8 +1,5 @@
-from E4_4U import MCTS
 from random import choice
-import inspect
 import copy
-import time
 
 
 player = 'o'
@@ -202,28 +199,3 @@ class Board:
             return (False,None)
         else:
             return (True,won[0][1])
-
-
-b = Board()
-state = b.state
-j=0
-while not b.is_ended(b.state)[0]:
-    if j%2 == 0:
-        start = time.time()
-        nextmove=MCTS(b)
-        end = time.time()
-        print("Total time: " + str(end - start))
-        state = b.do_move(state,player,nextmove)
-    else:
-        # b.print_board(state)
-        # print("0 1 2 3 4 5 6")
-        # col = input()
-        # row = input()
-        # move = (col,row)
-        # state = b.do_move(state,enemy,move)
-        state = b.do_move(state,enemy,choice(b.get_valid_moves(state)))
-    b.print_board(state)
-    j += 1
-    
-
-print(b.is_ended(b.state))
