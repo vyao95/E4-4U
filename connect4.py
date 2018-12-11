@@ -1,3 +1,10 @@
+from E4_4U import MCTS
+from random import choice
+import inspect
+import copy
+import time
+
+
 player = 'o'
 enemy = 'x'
 empty = '.'
@@ -29,18 +36,20 @@ class Board:
     # Applies move to state
     # Returns new state
     def do_move(self,state,turn,move):
-        if move in state:
-            if move in self.get_valid_moves(state):
-                if state[move] == empty:
-                    state[move] = turn
+        new_state = copy.deepcopy(state)
+        if move in new_state:
+            if move in self.get_valid_moves(new_state):
+                if new_state[move] == empty:
+                    new_state[move] = turn
                 else:
-                    print("do_move: Tried to do " + str(move) + " but position is " + str(state[move]))
+                    print("do_move: Tried to do " + str(move) + " but position is " + str(new_state[move]))
             else:
-                print("do_move: Not a valid move")
+                print("do_move: Not a valid move. " + str(move))
         else:
-            print("do_move: Move not in board.")
-        self.state = state
-        return state
+            print("do_move: Move not in board. " + str(move))
+        self.state = new_state
+        self.turn = player if turn == enemy else enemy
+        return new_state
 
 
     # Gets the best move to do given a state and a move set
@@ -68,6 +77,7 @@ class Board:
         valid_moves = []
         for col in range(width):
             for row in range(height):
+                
                 if state[col,row] == empty:
                     valid_moves.append((col,row))
                     break
@@ -81,7 +91,7 @@ class Board:
         winning_moves = []
         players = [player,enemy]
 
-        if len(valid_moves) == 0: # this will let us check if any moves are winning/losing moves
+        if not valid_moves: # this will let us check if any moves are winning/losing moves
             valid_moves = self.get_valid_moves(state)
 
         for turn in players: # check for both player and enemy
@@ -104,7 +114,7 @@ class Board:
                 winnable = 0
                 #horizontal win
                 for k in range(-1,2,2): # check to both left and right
-                    if move not in winning_moves: # haven't already found win from one direction
+                    if (move,turn) not in winning_moves: # haven't already found win from one direction
                         for i in range(1,4):
                             if (move[0]-i*k,move[1]) in state: # check 3 left/right
                                 if (state[(move[0]-i*k,move[1])] == turn):
@@ -122,7 +132,7 @@ class Board:
                 winnable = 0
                 # / win
                 for k in range(-1,2,2): # check bottom left and top right directions
-                    if move not in winning_moves: # haven't already found win from one direction
+                    if (move,turn) not in winning_moves: # haven't already found win from one direction
                         for i in range(1,4):
                             if (move[0]-i*k,move[1]-i*k) in state:
                                 if (state[(move[0]-i*k,move[1]-i*k)] == turn):
@@ -140,7 +150,7 @@ class Board:
                 winnable = 0
                 # \ win
                 for k in range(-1,2,2): # check bottom right and top left directions
-                    if move not in winning_moves: # haven't already found win from one direction
+                    if (move,turn) not in winning_moves: # haven't already found win from one direction
                         for i in range(1,4):
                             if (move[0]-i*k,move[1]+i*k) in state:
                                 if (state[(move[0]-i*k,move[1]+i*k)] == turn):
@@ -161,6 +171,9 @@ class Board:
     # Checks if game at state is over by looking at the last possible moves (top piece of every row)
     # Returns (game ended, player that won)
     def is_ended(self,state):
+        if sum([1 if taken_piece == player or taken_piece == enemy
+                  else 0 for taken_piece in state.values()]) == height*width:
+            return (True,None)
         last_moves = []
         for col in range(width):
             for row in range(height):
@@ -171,67 +184,46 @@ class Board:
                 elif row == height - 1: # if we reach the top
                     last_moves.append((col,row))
                     
-            
+           
         won = self.get_winning_moves(state,last_moves)
         # won will contains wins for either player
         # so we must check if that player actually owns the piece.
+        # we need a separate to maintain what we need to remove or else it will not properly
+        # iterate through every item
+        remove_list = []
         for move in won: 
             if state[move[0]] != move[1]:
-                won.remove(move)
-                
+                remove_list.append(move)
+        for move in remove_list:
+            won.remove(move)
+            
+        
         if len(won) == 0:
             return (False,None)
         else:
-            return (True,won)
+            return (True,won[0][1])
 
 
 b = Board()
-b.state[0,0] = enemy
-b.state[1,0] = player
-b.state[2,0] = player
-b.state[3,0] = enemy
-b.state[4,0] = enemy
-b.state[5,0] = enemy
-b.state[6,0] = player
+state = b.state
+j=0
+while not b.is_ended(b.state)[0]:
+    if j%2 == 0:
+        start = time.time()
+        nextmove=MCTS(b)
+        end = time.time()
+        print("Total time: " + str(end - start))
+        state = b.do_move(state,player,nextmove)
+    else:
+        # b.print_board(state)
+        # print("0 1 2 3 4 5 6")
+        # col = input()
+        # row = input()
+        # move = (col,row)
+        # state = b.do_move(state,enemy,move)
+        state = b.do_move(state,enemy,choice(b.get_valid_moves(state)))
+    b.print_board(state)
+    j += 1
+    
 
-b.state[1,1] = enemy
-b.state[2,1] = enemy
-b.state[3,1] = player
-b.state[5,1] = enemy
-b.state[6,1] = enemy
-
-b.state[1,2] = player
-b.state[2,2] = enemy
-b.state[3,2] = enemy
-b.state[5,2] = player
-b.state[6,2] = enemy
-
-b.state[1,3] = player
-b.state[2,3] = player
-b.state[3,3] = player
-b.state[5,3] = player
-b.state[6,3] = player
-
-b.state[1,4] = enemy
-b.state[2,4] = player
-b.state[6,2] = enemy
-b.state[3,4] = enemy
-b.state[5,4] = player
-b.state[6,4] = enemy
-
-b.state[1,5] = enemy
-b.state[2,5] = player
-b.state[3,5] = player
-b.state[5,5] = enemy
-b.state[6,5] = player
-
-
-b.state[4,1] = enemy
-b.state[4,2] = player
-
-
-b.print_board(b.state)
-
-print(b.get_valid_moves(b.state))
-print(b.get_winning_moves(b.state))
 print(b.is_ended(b.state))
