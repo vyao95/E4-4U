@@ -61,9 +61,6 @@ def expand_leaf(node, board):
     """
     move = board.get_best_move(node.state,node.untried_actions)
     node.untried_actions.remove(move)
-    print("expand leaf: ")
-    board.print_board(node.state)
-    print(move)
     new_state = board.do_move(node.state,node.turn,move)
     new_node = MCTSNode(state = new_state,
                         turn = player if node.turn == enemy else enemy,
@@ -88,17 +85,13 @@ def rollout(board, node):
     game_over = (False,0)
 
     while not game_over[0]:
-        print("\nrolling out")
-        # if not board.get_valid_moves(board.state): 
-            # print(game_over)
-        # board.print_board(board.state)
-        move = choice(board.get_valid_moves(board.state))
-        # print("attempting move: " + str(move))
-        state = board.do_move(board.state, turn, move)
-        # print("done move")
+        # print("rollout:")
+        # board.print_board(state)
+        # print(game_over)
+        move = choice(board.get_valid_moves(state))
+        state = board.do_move(state, turn, move)
         turn = player if turn == enemy else enemy
-        game_over = board.is_ended(board.state)
-
+        game_over = board.is_ended(state)
     return game_over[1]
 
 
@@ -126,6 +119,11 @@ def MCTS(board):
     Returns:    The action to be taken.
 
     """
+    winning_moves = board.get_winning_moves(board.state)
+    if winning_moves:
+        print("E4-4U goes: " + str(winning_moves[0][0]))
+        return winning_moves[0][0]
+        
     root_node = MCTSNode(   state = board.state,
                             turn = player,
                             parent=None,
@@ -141,10 +139,11 @@ def MCTS(board):
         winner = rollout(board, leaf_node)
         won = True if winner == player else False
         backpropagate(leaf_node,won)
+        # board.print_board(leaf_node.state)
 
 
     action = get_child_by_winrate(root_node).parent_action
-
+    # print(root_node.child_nodes)
     print("E4-4U goes: " + str(action))
 
     return action
