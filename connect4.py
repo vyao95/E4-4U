@@ -1,5 +1,7 @@
 from E4_4U import MCTS
 from random import choice
+import inspect
+import copy
 player = 'o'
 enemy = 'x'
 empty = '.'
@@ -31,18 +33,24 @@ class Board:
     # Applies move to state
     # Returns new state
     def do_move(self,state,turn,move):
-        if move in state:
-            if move in self.get_valid_moves(state):
-                if state[move] == empty:
-                    state[move] = turn
+        curframe = inspect.currentframe()
+        calframe = inspect.getouterframes(curframe, 2)
+        print('caller name:', calframe[1][3])
+        new_state = copy.deepcopy(state)
+        if move in new_state:
+            if move in self.get_valid_moves(new_state):
+                if new_state[move] == empty:
+                    new_state[move] = turn
+                    print("did move")
                 else:
-                    print("do_move: Tried to do " + str(move) + " but position is " + str(state[move]))
+                    print("do_move: Tried to do " + str(move) + " but position is " + str(new_state[move]))
             else:
+                print(self.get_valid_moves(new_state))
                 print("do_move: Not a valid move")
         else:
             print("do_move: Move not in board.")
-        self.state = state
-        return state
+        self.new_state = new_state
+        return new_state
 
 
     # Gets the best move to do given a state and a move set
@@ -70,7 +78,9 @@ class Board:
         valid_moves = []
         for col in range(width):
             for row in range(height):
+                
                 if state[col,row] == empty:
+                    print("found empty: " + str((col,row)))
                     valid_moves.append((col,row))
                     break
         return valid_moves
@@ -83,7 +93,7 @@ class Board:
         winning_moves = []
         players = [player,enemy]
 
-        if len(valid_moves) == 0: # this will let us check if any moves are winning/losing moves
+        if not valid_moves: # this will let us check if any moves are winning/losing moves
             valid_moves = self.get_valid_moves(state)
 
         for turn in players: # check for both player and enemy
@@ -188,14 +198,17 @@ class Board:
 
 
 b = Board()
+state = b.state
 j=0
 while not b.is_ended(b.state)[0]:
+    print("cat")
     nextmove=MCTS(b)
     if j%2 == 0:
-        b.do_move(b.state,player,nextmove)
+        b.do_move(state,player,nextmove)
     else:
-        b.do_move(b.state,enemy,nextmove)
-    b.print_board(b.state)
+        b.do_move(state,enemy,nextmove)
+    b.print_board(state)
+    print("fish")
     
 b.print_board(b.state)
 
