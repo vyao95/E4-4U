@@ -1,4 +1,4 @@
-from PIL import ImageGrab
+import pyscreenshot as ImageGrab
 from pynput.mouse import Button, Controller, Listener
 import os
 import time
@@ -47,6 +47,7 @@ def screen_grab_box():
     x2,y2 = coordinates[1]
     box = (x1, y1, x2, y2)
     im = ImageGrab.grab(box)
+    
     if DEBUG:
         print("screen_grab_box() with " + str(box) + "saved as cat.png")
         im.save('cat.png')
@@ -62,34 +63,28 @@ def get_top_left_piece(image):
     global board_rgb, empty_rgb
     x,y = 0,0
     board_rgb = image.getpixel((x,y))
-    print("GTLP board rgb: " + str(board_rgb))
+    
     while (image.getpixel((x,y)) == board_rgb):
-        x,y = (x+10,y+10)
+        x,y = (x+5,y+5)
+        
     if DEBUG:
         print("top left piece: " + str((x,y)))
+
     empty_rgb = image.getpixel((x,y))
-    print("GTLP empty rgb: " + str(empty_rgb))
     return (x,y)
 
     
-def get_right_offset(image):
+def get_x_offset(image):
     top_left_x, top_left_y = get_top_left_piece(image)
-    print("GRO board rgb: " + str(board_rgb))
-    print("GRO empty rgb: " + str(empty_rgb))
     x_offset = 0
-    print("empty: " + str(empty_rgb))
-    print("init" + str(image.getpixel((top_left_x + x_offset,top_left_y))))
+    
     # get to the board again
     while (image.getpixel((top_left_x + x_offset,top_left_y)) == empty_rgb):
-        print("going right.. empty")
-        x_offset += 10
+        x_offset += 5
         
-    print("board: " + str(board_rgb))
-    print("should be board: " + str(image.getpixel((top_left_x + x_offset,top_left_y))))
     # get to the next piece from board
     while (image.getpixel((top_left_x + x_offset,top_left_y)) == board_rgb):
-        print("going right.. board")
-        x_offset += 10
+        x_offset += 5
         
     return x_offset
         
@@ -104,8 +99,28 @@ def left_click(x, y):
     
     
 if __name__ == '__main__':
-    print("Please click top left and bottom right of the Connect 4 Board on your turn.")
-    get_board_coordinates()
-    image = screen_grab_box()
-    print(get_right_offset(image))
-    print(coordinates)
+    
+    if DEBUG:
+        image = ImageGrab.Image.open('./connect4board.png')
+        image = image.convert('RGB')
+    else:  
+        print("Please click top left and bottom right of the Connect 4 Board on your turn.")
+        get_board_coordinates()
+        image = screen_grab_box()
+        
+        
+    top_left = get_top_left_piece(image)
+    x_offset = get_x_offset(image)
+    print("offset: " + str(x_offset))
+    
+   
+    if DEBUG:
+        print("board rgb: " + str(board_rgb))
+        print("empty rgb: " + str(empty_rgb))
+        for col in range(board_width):
+            for row in range(board_height):
+                print("Trying " + str((top_left[0]+x_offset*col,top_left[1]+x_offset*row)))
+                print(image.getpixel((top_left[0]+x_offset*col,top_left[1]+x_offset*row)))
+                # image.putpixel((top_left[0]+x_offset*i,top_left[1]),0)
+                image.putpixel((top_left[0]+x_offset*col,top_left[1]+x_offset*row),(0,0,0))
+        image.save('cat.png')
