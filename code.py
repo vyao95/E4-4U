@@ -1,5 +1,7 @@
 import pyscreenshot as ImageGrab
+import PIL as Image
 from pynput.mouse import Button, Controller, Listener
+from connect4 import Board
 import os
 import time
 
@@ -11,6 +13,9 @@ mouse = Controller()
 board_width = 7
 board_height = 6
 
+enemy = 'x'
+player = 'o'
+empty = '.'
 
 coordinates = []
 board_rgb = (0,0,0)
@@ -105,11 +110,45 @@ def left_click(x, y):
     mouse.move(x,y)
     mouse.press(Button.left)
     mouse.release(Button.left)
-    
+
+def populateState(topLeft, offset):
+    top_left_x, top_left_y = topLeft
+    image = screen_grab_box()
+
+    state = {}
+    for col in range(board_width):
+        for row in range(board_height):
+            state[(col,row)] = empty
+
+    col = 0
+    for i in range(0, board_width, offset):
+        row = 0
+        for j in range(0, board_height, offset):
+            print(image.getpixel((top_left_x + i, top_left_y + j)))
+            if image.getpixel((top_left_x + i, top_left_y + j)) == enemy_rgb:
+                state[(col, row)] = enemy
+            elif image.getpixel((top_left_x + i, top_left_y + j)) == player_rgb:
+                state[(col, row)] = player
+            else:
+                state[(col, row)] = empty
+            row += 1
+        col += 1
+
+    return state
+
     
 if __name__ == '__main__':
     print("Please click top left and bottom right of the Connect 4 Board on your turn.")
     get_board_coordinates()
     image = screen_grab_box()
+
+
+    board = Board()
+
+    state = populateState(topLeft, offset, board)
+    # game_board = Board()
+    # while !game_board.is_ended(game_board.state):
+        # nextBoard = populateState(topLeft, offset, board)
+
     print(get_right_offset(image))
     print(coordinates)
