@@ -1,6 +1,7 @@
 from MCTS import MCTS
 from connect4 import Board
 import pyscreenshot as ImageGrab
+import PIL as Image
 from pynput.mouse import Button, Controller, Listener
 import sys
 import os
@@ -19,7 +20,6 @@ enemy = 'x'
 player = 'o'
 empty = '.'
 
-mouse = Controller()
 
 # [top-left,bottom-right] as according to user clicks
 coordinates = [] 
@@ -44,10 +44,12 @@ base_y = 0
 
 # left click at (x,y)
 def left_click(pos):
+    mouse = Controller()
     if DEBUG:
         print("left clicking @ " + str((pos[0],pos[1])))
-    mouse.move(pos[0],pos[1])
-    mouse.click(Button.left,10)
+    mouse.position = (pos[0],pos[1])
+    mouse.press(Button.left)
+    mouse.release(Button.left)
     
 
         
@@ -298,6 +300,4 @@ if __name__ == '__main__':
             print("Initial game is player turn")
         set_player_rgb(b)
         while b.state == get_init_state(2):
-            pas
-    
-    left_click((800,85))
+            time.sleep(5)
