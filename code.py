@@ -1,4 +1,4 @@
-from PIL import ImageGrab
+import pyscreenshot as ImageGrab
 from pynput.mouse import Button, Controller, Listener
 import os
 import time
@@ -38,6 +38,10 @@ def on_click(x, y, button, pressed):
             print("Coordinates: " + str(coordinates))
         # Stop listener
         return False
+
+def on_move(x, y):
+    print('Pointer moved to {0}'.format(
+        (x, y)))
 
         
 # Gets a screenshot from coordinates[0] and coordinates[1]
