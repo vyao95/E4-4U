@@ -43,11 +43,6 @@ def on_click(x, y, button, pressed):
             print("Coordinates: " + str(coordinates))
         # Stop listener
         return False
-
-def on_move(x, y):
-    print('Pointer moved to {0}'.format(
-        (x, y)))
-
         
 # Gets a screenshot from coordinates[0] and coordinates[1]
 # Returns: screenshot
@@ -83,19 +78,29 @@ def get_top_left_piece(image):
     return (x,y)
 
     
-def get_x_offset(image):
+def get_offset(image):
+    
     top_left_x, top_left_y = get_top_left_piece(image)
-    x_offset = 0
+    offset_x = 0
+    offset_y = 0
     
     # get to the board again
-    while (image.getpixel((top_left_x + x_offset,top_left_y)) == empty_rgb):
-        x_offset += 5
+    while (image.getpixel((top_left_x + offset_x,top_left_y)) == empty_rgb):
+        offset_x += 5
         
     # get to the next piece from board
-    while (image.getpixel((top_left_x + x_offset,top_left_y)) == board_rgb):
-        x_offset += 5
+    while (image.getpixel((top_left_x + offset_x,top_left_y)) == board_rgb):
+        offset_x += 5
         
-    return x_offset
+    # get to the board again
+    while (image.getpixel((top_left_x,top_left_y + offset_y)) == empty_rgb):
+        offset_y += 5
+        
+    # get to the next piece from board
+    while (image.getpixel((top_left_x,top_left_y + offset_y)) == board_rgb):
+        offset_y += 5
+            
+    return (offset_x,offset_y)
         
     
 # left click at (x,y)
@@ -106,14 +111,11 @@ def left_click(x, y):
     mouse.press(Button.left)
     mouse.release(Button.left)
 
-def populateState(topLeft, offset):
-    top_left_x, top_left_y = topLeft
-    image = screen_grab_box()
+def get_state(image):
+    top_left_x, top_left_y = get_top_left_piece(image)
+    offset_x,offset_y = get_offset(image)
 
     state = {}
-    for col in range(board_width):
-        for row in range(board_height):
-            state[(col,row)] = empty
 
     col = 0
     for i in range(0, board_width, offset):
@@ -131,9 +133,44 @@ def populateState(topLeft, offset):
 
     return state
 
+# returns state of the game 
+#   image: screenshot of game
+#   num_turns: 1 or 2
+#       if 1, then IF there is a piece, it's enemy's ELSE the board is empty
+#       if 2, 
+def get_state(image,num_turns):
+    top_left_x, top_left_y = get_top_left_piece(image)
+    offset_x,offset_y = get_offset(image)
+
+    state = {}
+
+    if num_turns == 1:
+        for col in range(0, board_width):
+            # 0 -2 because only need initial two states
+            for row in range(4, 6):
+                image.putpixel((top_left_x + x_offset * col + 5, top_left_y + y_offset * row + 5),(255,0,0))
+                pixel_rgb = image.getpixel(
+                    (top_left_x + x_offset * col, top_left_y + y_offset * row))
+                if pixel_rgb == empty_rgb:
+                    state[(col, row)] = empty
+                else:
+                    enemy_rgb = pixel_rgb
+                    state[(col, row)] = enemy
+                        
+        # for col in range(board_width):
+            # for row in range(board_height):
+                # print("Trying " + str((top_left[0]+x_offset*col,top_left[1]+y_offset*row)))
+                # print(image.getpixel((top_left[0]+x_offset*col,top_left[1]+y_offset*row)))
+                # # image.putpixel((top_left[0]+x_offset*i,top_left[1]),0)
+
+                # image.putpixel((top_left[0]+x_offset*col,top_left[1]+y_offset*row),(0,0,0))
+    image.save('fish.png')
+    return state
+
     
 if __name__ == '__main__':    
     if DEBUG:
+        # image = ImageGrab.Image.open('./c4_enemy_move.png')
         image = ImageGrab.Image.open('./connect4board.png')
         image = image.convert('RGB')
     else:  
@@ -141,19 +178,38 @@ if __name__ == '__main__':
         get_board_coordinates()
         image = screen_grab_box()
         
-        
-    top_left = get_top_left_piece(image)
-    x_offset = get_x_offset(image)
-    print("offset: " + str(x_offset))
+    x_offset,y_offset = get_offset(image)
+    init_state = get_state(image,1)
+    b = Board()
+    b.state = init_state
+    if enemy in init_state.values():
+        print("enemy did thing")
+        # move = MCTS(b.state)
+        # left_click(move[0]*x_offset,move[1]*y_offset)
+        # time.sleep(1)
+        # while 
+        # image = screen_grab_box()
+        #screenshot
+        #player rgb
+    else:
+        print("nothing did thing")
+        #MCTS
+        #player rgb
+        #poll
+        # enemy rgb
     
    
-    if DEBUG:
-        print("board rgb: " + str(board_rgb))
-        print("empty rgb: " + str(empty_rgb))
-        for col in range(board_width):
-            for row in range(board_height):
-                print("Trying " + str((top_left[0]+x_offset*col,top_left[1]+x_offset*row)))
-                print(image.getpixel((top_left[0]+x_offset*col,top_left[1]+x_offset*row)))
-                # image.putpixel((top_left[0]+x_offset*i,top_left[1]),0)
-                image.putpixel((top_left[0]+x_offset*col,top_left[1]+x_offset*row),(0,0,0))
-        image.save('cat.png')
+    # if DEBUG:
+        
+        # top_left = get_top_left_piece(image)
+        # print("offset: " + str(x_offset))
+        # print("board rgb: " + str(board_rgb))
+        # print("empty rgb: " + str(empty_rgb))
+        # for col in range(board_width):
+            # for row in range(board_height):
+                # print("Trying " + str((top_left[0]+x_offset*col,top_left[1]+y_offset*row)))
+                # print(image.getpixel((top_left[0]+x_offset*col,top_left[1]+y_offset*row)))
+                # # image.putpixel((top_left[0]+x_offset*i,top_left[1]),0)
+
+                # image.putpixel((top_left[0]+x_offset*col,top_left[1]+y_offset*row),(0,0,0))
+        # image.save('cat.png')
