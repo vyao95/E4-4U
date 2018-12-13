@@ -39,6 +39,10 @@ def on_click(x, y, button, pressed):
         # Stop listener
         return False
 
+def on_move(x, y):
+    print('Pointer moved to {0}'.format(
+        (x, y)))
+
         
 # Gets a screenshot from coordinates[0] and coordinates[1]
 # Returns: screenshot
