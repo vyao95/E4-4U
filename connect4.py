@@ -1,5 +1,5 @@
 from random import choice
-import copy
+from copy import deepcopy
 
 
 player = 'o'
@@ -33,7 +33,7 @@ class Board:
     # Applies move to state
     # Returns new state
     def do_move(self,state,turn,move):
-        new_state = copy.deepcopy(state)
+        new_state = deepcopy(state)
         if move in new_state:
             if move in self.get_valid_moves(new_state):
                 if new_state[move] == empty:

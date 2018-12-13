@@ -1,7 +1,8 @@
 from mcts_node import MCTSNode
+import connect4
 from random import choice
 from math import sqrt, log
-import connect4
+from copy import deepcopy
 
 player = connect4.player
 enemy = connect4.enemy
@@ -111,7 +112,7 @@ def backpropagate(node, won):
         node = node.parent
 
 
-def MCTS(board):
+def MCTS(state):
     """ Performs MCTS by sampling games and calling the appropriate functions to construct the game tree.
 
     Args:
@@ -120,16 +121,17 @@ def MCTS(board):
     Returns:    The action to be taken.
 
     """
-    winning_moves = board.get_winning_moves(board.state)
+    board = connect4.Board()
+    winning_moves = board.get_winning_moves(state)
     if winning_moves:
         print("E4-4U goes: " + str(winning_moves[0][0]))
         return winning_moves[0][0]
         
-    root_node = MCTSNode(   state = board.state,
+    root_node = MCTSNode(   state = deepcopy(state),
                             turn = player,
                             parent=None,
                             parent_action=None,
-                            untried_actions=board.get_valid_moves(board.state))
+                            untried_actions=board.get_valid_moves(state))
 
     for _ in range(num_nodes):
         node = root_node
