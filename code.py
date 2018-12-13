@@ -1,7 +1,6 @@
 from MCTS import MCTS
 from connect4 import Board
 import pyscreenshot as ImageGrab
-import PIL as Image
 from pynput.mouse import Button, Controller, Listener
 import sys
 import os
@@ -9,6 +8,7 @@ import time
 
 
 DEBUG = True
+DEBUG_FILE = False
 DEBUG_file = "./empty_board.png"
 # DEBUG_file = "./enemy_board.png"
 
@@ -47,8 +47,7 @@ def left_click(pos):
     if DEBUG:
         print("left clicking @ " + str((pos[0],pos[1])))
     mouse.move(pos[0],pos[1])
-    mouse.press(Button.left)
-    mouse.release(Button.left)
+    mouse.click(Button.left,10)
     
 
         
@@ -84,7 +83,7 @@ def translate_MCTS_move(move):
 # Sets all global variables
 # EXCEPT player and enemy rgb values. We must play first two games to get these
 def initialize_game():
-    if not DEBUG:
+    if not DEBUG_FILE:
         set_board_coordinates()
     image = get_screenshot()
     set_top_left_piece(image)
@@ -202,7 +201,7 @@ def set_player_rgb(board):
 # Gets a screenshot from coordinates[0] and coordinates[1]
 # Returns: screenshot
 def get_screenshot():
-    if DEBUG:
+    if DEBUG_FILE:
         im = ImageGrab.Image.open(DEBUG_file)
         im = im.convert('RGB')
     else:
@@ -299,5 +298,6 @@ if __name__ == '__main__':
             print("Initial game is player turn")
         set_player_rgb(b)
         while b.state == get_init_state(2):
-            pass
+            pas
     
+    left_click((800,85))
