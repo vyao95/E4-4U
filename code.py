@@ -102,11 +102,25 @@ def initialize_game():
 def RGB_equality(c1, c2):
     if len(c1) != 3 or len(c2) != 3:
         return False
-    if (abs(c1[0] - c2[0] > 5) or 
-        abs(c1[1] - c2[1] > 5) or 
-        abs(c2[2] - c2[2] > 5) ):
+    if (abs(c1[0] - c2[0]) > 5 or 
+        abs(c1[1] - c2[1]) > 5 or 
+        abs(c2[2] - c2[2]) > 5 ):
         return False
     return True
+    
+    
+# Applies move to the game
+# board: the board with state updated to latest state
+def apply_move(board):
+    print("apply_move_1")
+    board.print_board(board.state)
+    move = MCTS(board.state)
+    board.do_move(board.state,player,move) # updates board state
+    PX_move,_ = translate_move(move)
+    left_click(PX_move) # updates actual game (clicks in game)
+    print("apply_move_2")
+    board.print_board(board.state)
+        
     
 #*************** SETTERS ***************
 
@@ -281,23 +295,27 @@ def get_state():
     image = get_screenshot()
 
     state = {}
+    
+    if DEBUG:
+        print("friendly: " + str(player_rgb))
+        print("enemy: " + str(enemy_rgb))
+        print("empty: " + str(empty_rgb))
                 
 
     for MCTS_pos,GAME_pos in positions.items():
-        state[MCTS_pos] =   empty if image.getpixel(GAME_pos) == empty_rgb else \
-                            enemy if image.getpixel(GAME_pos) == enemy_rgb else \
-                            player
-                            
-                
+        pixel_rgb = image.getpixel(GAME_pos)
         if DEBUG:
-            image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
-                        GAME_pos[1] + DEBUG_pxl_off),
-                            (255,0,0))
+            print("pixel: " + str(pixel_rgb))
+        if RGB_equality(pixel_rgb, player_rgb):
+            state[MCTS_pos] = player
+        elif RGB_equality(pixel_rgb, enemy_rgb):
+            state[MCTS_pos] = enemy
+        else:
+            state[MCTS_pos] = empty 
                             
     if DEBUG:
         print("get_state:")
         print("\tstate: " + str(state))
-        image.save("get_state.png")
     
     return state
     
@@ -333,6 +351,17 @@ if __name__ == '__main__':
             time.sleep(.5)
         b.state.update(polled_state)
     
+    while not b.is_ended(b.state)[0]:
+        polled_state = get_state()
+        while polled_state == b.state:
+            polled_state = get_state()
+            time.sleep(.5)
+        b.state.update(polled_state)
+        b.print_board(b.state)
+        apply_move(b)
+        b.print_board(b.state)
+        
+    print(b.is_ended(b.state))    
     print(empty_rgb)
     print(player_rgb)
     print(enemy_rgb)
