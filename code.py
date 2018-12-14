@@ -25,6 +25,8 @@ enemy = 'x'
 player = 'o'
 empty = '.'
 
+mode = 'p'
+player_level = 'i'
 # [top-left,bottom-right] as according to user clicks
 coordinates = [] 
 positions = {}
@@ -319,10 +321,16 @@ def get_state():
     
     return state
     
-    
+def get_mode():
+    global mode
+    mode = input("Player or Guide (type p or g): ")
+    if mode == 'p':
+        player_level = input("Beginner, Intermediate, or Expert (type b, i, or e): ")
+
+
 #*************** MAIN ***************
     
-if __name__ == '__main__':   
+if __name__ == '__main__': 
     print("Please click top left and bottom right of the Connect 4 Board on your turn.")
     initialize_game()
     

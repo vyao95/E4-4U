@@ -9,6 +9,16 @@ enemy = connect4.enemy
 num_nodes = 1000
 explore_faction = 2
 
+def set_num_nodes(level):
+    global num_nodes
+
+    if level == "b":
+        num_nodes = 100
+    elif level == "i":
+        num_nodes = 1000
+    else:
+        num_nodes = 10000
+
 def get_child_by_winrate(node):
     children = [(c,(c.wins / c.visits))
                for c in node.child_nodes.values()]
