@@ -2,7 +2,11 @@ from MCTS import MCTS
 from connect4 import Board
 import pyscreenshot as ImageGrab
 import PIL as Image
-from pynput.mouse import Button, Controller, Listener
+# issues with pynput clicking at wrong location on screen despite saying it clicks where I want.
+from pynput.mouse import Button, Listener 
+# so using pyautogui to handle clicks
+import pyautogui
+
 import sys
 import os
 import time
@@ -21,7 +25,6 @@ enemy = 'x'
 player = 'o'
 empty = '.'
 
-
 # [top-left,bottom-right] as according to user clicks
 coordinates = [] 
 positions = {}
@@ -32,42 +35,18 @@ empty_rgb = (0,0,0)
 enemy_rgb = (0,0,0)
 player_rgb = (0,0,0)
 
-# distance between pieces
-offset_x = 0
-offset_y = 0
-
-# x and y pixels of the top-left piece.
-# this is essentially our (0,0) => base
-base_x = 0
-base_y = 0
-
 
 #*************** MOUSE OPERATIONS ***************
 
 # left click at (x,y)
 def left_click(pos):
-    mouse = Controller()
     if DEBUG:
         # print("Game box: " + str(coordinates[0]) + ", " + str(coordinates[1]))
-        # print("base_x: " + str(base_x))
-        # print("base_y: " + str(base_y))
-        # print("\toffset_x: " + str(offset_x))
-        # print("\toffset_y: " + str(offset_y))
         print("left clicking @ " + str((pos[0],pos[1])))
-        print("Currently @ " + str(mouse.position))
-    mouse.position = (coordinates[0][0] + pos[0],
-                      coordinates[0][1] + pos[1])
-    mouse.press(Button.left)
-    mouse.release(Button.left)
-    print("Pressed @ " + str(mouse.position))
-    
-# left click at (x,y)
-def left_click_test(pos):
-    mouse = Controller()
-    mouse.position = (pos)
-    mouse.press(Button.left)
-    mouse.release(Button.left)
-    print("Pressed @ " + str(mouse.position))
+        print("Currently @ " + str(pyautogui.position()))
+    pyautogui.moveTo(pos[0],pos[1],.5)
+    pyautogui.click()
+    print("Pressed @ " + str(pyautogui.position()))
     
 
         
@@ -91,21 +70,21 @@ def on_click(x, y, button, pressed):
 
 # translates a move from MCTS implementation to the actual game implementation
 # move: MCTS move
-# returns: GAME move
+# returns: (PX move,GAME move)
+#   PX move: The pixel location of the move on the game only 
+#   GAME move: The pixel location of the move on the entire full screen
 def translate_move(move):
-    global base_x, base_y
     
-    move = positions[move]
-    GAME_move = (move[0] + base_x, move[1] + base_y)
+    GAME_move = positions[move]
+    PX_move = (coordinates[0][0] + GAME_move[0], coordinates[0][1] + GAME_move[1])
     
     if DEBUG:
         print("translate_MCTS_move: ")
-        print("\tbase_x: " + str(base_x))
-        print("\tbase_y: " + str(base_y))
-        print("\tBounded: " + str(move))
-        print("\tFull: " + str(GAME_move))
+        print("\tOriginal: " + str(move))
+        print("\tBounded: " + str(GAME_move))
+        print("\tFull: " + str(PX_move))
     
-    return GAME_move
+    return (PX_move,GAME_move)
 
     
 # Sets all global variables
@@ -118,6 +97,17 @@ def initialize_game():
     set_positions()
     
 
+#checks if two RGB colors are "equal" (i.e. very close)
+# return T/F
+def RGB_equality(c1, c2):
+    if len(c1) != 3 or len(c2) != 3:
+        return False
+    if (abs(c1[0] - c2[0] > 5) or 
+        abs(c1[1] - c2[1] > 5) or 
+        abs(c2[2] - c2[2] > 5) ):
+        return False
+    return True
+    
 #*************** SETTERS ***************
 
    
@@ -173,15 +163,14 @@ def set_board_empty_rgb(image):
 def set_player_rgb(board):
     global player_rgb
     
-    # move = MCTS(board.state)
-    move = (0,0)
+    move = MCTS(board.state)
     board.do_move(board.state,player,move) # updates board state
-    move = translate_move(move)
-    left_click(move) # updates actual game (clicks in game)
+    PX_move,GAME_move = translate_move(move)
+    left_click(PX_move) # updates actual game (clicks in game)
     time.sleep(1)
     # here we know what our move is, so wait until our piece lands, then get the rgb value
     image = get_screenshot()
-    player_rgb = image.getpixel(move)
+    player_rgb = image.getpixel(GAME_move)
     if DEBUG:
         print("set_player_rgb: ")
         print("\tplayer_rgb: " + str(player_rgb))
@@ -214,7 +203,7 @@ def get_screenshot():
 #   image: screenshot of game
 #   num_turns: 1 or 2 - first or second turn in the game
 def get_init_state(num_turns):
-    global enemy_rgb, empty_rgb, positions
+    global enemy_rgb, empty_rgb, player_rgb, positions
     image = get_screenshot()
 
     state = {}
@@ -228,15 +217,19 @@ def get_init_state(num_turns):
             
             if pixel_rgb == empty_rgb:
                 state[MCTS_pos] = empty 
+                if DEBUG:
+                    image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
+                                    GAME_pos[1] + DEBUG_pxl_off),
+                                        (0,255,0))
             else:
                 enemy_rgb = pixel_rgb
                 state[MCTS_pos] = enemy
+                if DEBUG:
+                    image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
+                                    GAME_pos[1] + DEBUG_pxl_off),
+                                        (255,0,0))
                                 
                     
-            if DEBUG:
-                image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
-                                GAME_pos[1] + DEBUG_pxl_off),
-                                    (255,0,0))
         if DEBUG:
             print("get_init_state_1:")
             print("\tstate: " + str(state))
@@ -244,22 +237,36 @@ def get_init_state(num_turns):
             
 #   this will only be called if player goes first, so player_rgb is set and we need enemy rgb.
     elif num_turns == 2:
+        if DEBUG:
+            print("enemy: " + str(enemy_rgb))
+            print("player: " + str(player_rgb))
+            print("empty: " + str(empty_rgb))
         for MCTS_pos,GAME_pos in positions.items():
             pixel_rgb = image.getpixel(GAME_pos)
-            
-            if pixel_rgb == empty_rgb:
+            if DEBUG:
+                print("pixel: " + str(pixel_rgb))
+                
+            if RGB_equality(pixel_rgb,empty_rgb):
                 state[MCTS_pos] = empty 
-            elif pixel_rgb == player_rgb:
+                if DEBUG:
+                    image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
+                                    GAME_pos[1] + DEBUG_pxl_off),
+                                        (0,255,0))
+            elif RGB_equality(pixel_rgb,player_rgb):
                 state[MCTS_pos] = player
+                if DEBUG:
+                    image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
+                                    GAME_pos[1] + DEBUG_pxl_off),
+                                        (0,0,255))
             else:
                 enemy_rgb = pixel_rgb
                 state[MCTS_pos] = enemy
+                if DEBUG:
+                    image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
+                                    GAME_pos[1] + DEBUG_pxl_off),
+                                        (255,0,0))
                                 
                     
-            if DEBUG:
-                image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
-                                GAME_pos[1] + DEBUG_pxl_off),
-                                    (255,0,0))
         if DEBUG:
             print("get_init_state_2:")
             print("\tstate: " + str(state))
@@ -321,6 +328,13 @@ if __name__ == '__main__':
         if DEBUG:
             print("Initial game is player turn")
         set_player_rgb(b)
-        while b.state == get_init_state(2):
-            pass
-    # left_click_test((805,650))
+        while enemy_rgb == (0,0,0):
+            polled_state = get_init_state(2)
+            time.sleep(.5)
+        b.state.update(polled_state)
+    
+    print(empty_rgb)
+    print(player_rgb)
+    print(enemy_rgb)
+    b.print_board(b.state)
+    
