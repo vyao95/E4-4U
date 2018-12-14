@@ -9,10 +9,10 @@ import time
 
 
 DEBUG = True
-DEBUG_FILE = False
+DEBUG_FILE = True
 DEBUG_pxl_off = 1 # offset to mark pixels
-DEBUG_file = "./empty_board.png"
-# DEBUG_file = "./enemy_board.png"
+# DEBUG_file = "./empty_board.png"
+DEBUG_file = "./enemy_board.png"
 
 board_width = 7
 board_height = 6
@@ -263,7 +263,8 @@ def get_screenshot():
     if DEBUG_FILE:
         im = ImageGrab.Image.open(DEBUG_file)
         im = im.convert('RGB')
-        coordinates.extend([(0,0),im.size])
+        if not coordinates:
+            coordinates.extend([(0,0),im.size])
         print(coordinates)
     else:
         x1,y1 = coordinates[0]
@@ -274,7 +275,8 @@ def get_screenshot():
     return im      
 
 
-# returns state of the game for early game.
+# returns state of the game for early game using the distance from 
+# top left spot to the immediate right and lower spots.
 # Note: this also sets enemy_rgb
 #   image: screenshot of game
 #   num_turns: 1 or 2 - first or second turn in the game
@@ -336,6 +338,47 @@ def get_init_state(num_turns):
     return state
     
     
+# returns state of the game for early game using spacing of the board.
+# Note: this also sets enemy_rgb
+#   image: screenshot of game
+#   num_turns: 1 or 2 - first or second turn in the game
+def get_state(num_turns):
+    global enemy_rgb, empty_rgb, player_rgb
+    image = get_screenshot()
+
+    state = {}
+    
+    pixel_positions = {}
+    game_height_px = coordinates[1][1] - coordinates[0][1]
+    game_width_px = coordinates[1][0] - coordinates[0][0]
+    
+    for col in range(0,board_width):
+        for row in range(0,board_height):
+            col_px = int((game_width_px/(2*board_width)) * (2*col + 1))
+            row_px = int((game_height_px/(2*board_height)) * (2*row + 1))
+            pixel_positions[(col,(row-5)*-1)] = (col_px, row_px)
+            if DEBUG:
+                print("pixel[" + str((col,row)) + "] = " + str((col_px,row_px))) 
+
+    for MCTS_pos,GAME_pos in pixel_positions.items():
+        state[MCTS_pos] =   empty if image.getpixel(GAME_pos) == empty_rgb else 
+                            enemy if image.getpixel(GAME_pos) == enemy_rgb else
+                            player if image.getpixel(GAME_pos) == player_rgb else
+                            
+                
+        if DEBUG:
+            image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
+                        GAME_pos[1] + DEBUG_pxl_off),
+                            (255,0,0))
+                            
+    if DEBUG:
+        print("get_state:")
+        print("\tstate: " + str(state))
+        image.save("get_state.png")
+    
+    return state
+    
+    
 #*************** MAIN ***************
     
 if __name__ == '__main__':   
@@ -343,7 +386,7 @@ if __name__ == '__main__':
     initialize_game()
     
     b = Board()
-    b.state.update(get_init_state(1))
+    b.state.update(get_init_state2(1))
     
     if DEBUG:
         print("\nStarting game...")
@@ -362,6 +405,6 @@ if __name__ == '__main__':
         if DEBUG:
             print("Initial game is player turn")
         set_player_rgb(b)
-        while b.state == get_init_state(2):
+        while b.state == get_init_state2(2):
             pass
     # left_click_test((805,650))
