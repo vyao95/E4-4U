@@ -275,79 +275,11 @@ def get_screenshot():
     return im      
 
 
-# returns state of the game for early game using the distance from 
-# top left spot to the immediate right and lower spots.
-# Note: this also sets enemy_rgb
-#   image: screenshot of game
-#   num_turns: 1 or 2 - first or second turn in the game
-def get_init_state(num_turns):
-    global enemy_rgb, empty_rgb, player_rgb
-    image = get_screenshot()
+#Returns dict with 
+#   key = MCTS implementation of position
+#   value = GAME implementation of where the key is (in image - does not consider outside the game)
+def get_positions():
 
-    state = {}
-
-#   IF there is a piece, it's enemy's 
-#   ELSE the board is empty
-    if num_turns == 1:
-        for col in range(0, board_width):
-            mcts_piece = (col,0)
-            game_piece = translate_MCTS_move(mcts_piece)
-            pixel_rgb = image.getpixel(game_piece)
-                
-            if pixel_rgb == empty_rgb:
-                state[mcts_piece] = empty
-            else:
-                enemy_rgb = pixel_rgb
-                state[mcts_piece] = enemy
-                
-            if DEBUG:
-                image.putpixel((game_piece[0] + DEBUG_pxl_off,
-                                game_piece[1] + DEBUG_pxl_off),
-                                    (255,0,0))
-        if DEBUG:
-            print("get_init_state_1:")
-            print("\tstate: " + str(state))
-            image.save("get_init_state_1.png")
-     
-#   this will only be called if player goes first, so player_rgb is set and we need enemy rgb.
-    elif num_turns == 2:
-        for col in range(0, board_width):
-            # only need first two rows
-            for row in range(0,2):
-                mcts_piece = (col,row)
-                game_piece = translate_MCTS_move(mcts_piece)
-                pixel_rgb = image.getpixel(game_piece)
-                
-                if pixel_rgb == empty_rgb:
-                    state[mcts_piece] = empty
-                elif pixel_rgb == player_rgb:
-                    state[mcts_piece] = player
-                else: 
-                    enemy_rgb = pixel_rgb
-                    state[mcts_piece] = enemy
-                    
-                if DEBUG:
-                    image.putpixel((game_piece[0] + DEBUG_pxl_off,
-                                    game_piece[1] + DEBUG_pxl_off),
-                                        (255,0,0))
-        if DEBUG:
-            print("get_init_state_2:")
-            print("\tstate: " + str(state))
-            image.save("get_init_state_2.png")
-                    
-    return state
-    
-    
-# returns state of the game for early game using spacing of the board.
-# Note: this also sets enemy_rgb
-#   image: screenshot of game
-#   num_turns: 1 or 2 - first or second turn in the game
-def get_state(num_turns):
-    global enemy_rgb, empty_rgb, player_rgb
-    image = get_screenshot()
-
-    state = {}
-    
     pixel_positions = {}
     game_height_px = coordinates[1][1] - coordinates[0][1]
     game_width_px = coordinates[1][0] - coordinates[0][0]
@@ -359,6 +291,80 @@ def get_state(num_turns):
             pixel_positions[(col,(row-5)*-1)] = (col_px, row_px)
             if DEBUG:
                 print("pixel[" + str((col,row)) + "] = " + str((col_px,row_px))) 
+                
+    return pixel_positions
+
+# returns state of the game for early game using the distance from 
+# top left spot to the immediate right and lower spots.
+# Note: this also sets enemy_rgb
+#   image: screenshot of game
+#   num_turns: 1 or 2 - first or second turn in the game
+def get_init_state(num_turns):
+    global enemy_rgb, empty_rgb
+    image = get_screenshot()
+
+    state = {}
+    
+    pixel_positions = get_positions()
+                
+#   IF there is a piece, it's enemy's 
+#   ELSE the board is empty
+    if num_turns == 1:
+        for MCTS_pos,GAME_pos in pixel_positions.items():
+            pixel_rgb = image.getpixel(GAME_pos)
+            
+            if pixel_rgb == empty_rgb:
+                state[MCTS_pos] = empty 
+            else:
+                enemy_rgb = pixel_rgb
+                state[MCTS_pos] = enemy
+                                
+                    
+            if DEBUG:
+                image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
+                                GAME_pos[1] + DEBUG_pxl_off),
+                                    (255,0,0))
+        if DEBUG:
+            print("get_init_state_1:")
+            print("\tstate: " + str(state))
+            image.save("get_init_state_1.png")
+            
+#   this will only be called if player goes first, so player_rgb is set and we need enemy rgb.
+    elif num_turns == 2:
+        for MCTS_pos,GAME_pos in pixel_positions.items():
+            pixel_rgb = image.getpixel(GAME_pos)
+            
+            if pixel_rgb == empty_rgb:
+                state[MCTS_pos] = empty 
+            elif pixel_rgb = player_rgb:
+                state[MCTS_pos] = player
+            else:
+                enemy_rgb = pixel_rgb
+                state[MCTS_pos] = enemy
+                                
+                    
+            if DEBUG:
+                image.putpixel((GAME_pos[0] + DEBUG_pxl_off,
+                                GAME_pos[1] + DEBUG_pxl_off),
+                                    (255,0,0))
+        if DEBUG:
+            print("get_init_state_2:")
+            print("\tstate: " + str(state))
+            image.save("get_init_state_2.png")
+            
+    return state
+    
+    
+# returns state of the game using spacing of the board.
+def get_state():
+    global enemy_rgb, empty_rgb, player_rgb
+    image = get_screenshot()
+
+    state = {}
+    
+    
+    pixel_positions = get_positions()
+                
 
     for MCTS_pos,GAME_pos in pixel_positions.items():
         state[MCTS_pos] =   empty if image.getpixel(GAME_pos) == empty_rgb else 
