@@ -47,5 +47,3 @@ Your next best move is (3, 1) (4th column from the left, 2nd row from the bottom
 <h2>Full Demo:</h2>
 
 https://youtu.be/iJY4uZ4lyKI
-
-Bonus: If you notice in the video, our bot reached #1 spot on the daily tournament leaderboard :).
